@@ -1,0 +1,89 @@
+---
+title: "Alternative Means"
+author: "Brian Mearns"
+date: "November 17, 2015"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r, echo=F}
+
+library(ggplot2)
+
+data.count <- 20
+data.min <- 50
+data.max <- 100
+
+data <- data.frame(d=sort(c(runif(data.count, 50, 100), runif(0.4*data.count, 75, 100))))
+data$num <- 1:length(data$d)
+data.stats <- data.frame(mean=mean(data$d), min=min(data$d), max=max(data$d), midpt=(min(data$d) + max(data$d))/2)
+data$dist.to.mean <- abs(data$d - data.stats$mean[1])
+data$side.of.mean <- factor(ifelse(data$d <= data.stats$mean[1], 'left', 'right'), c('left', 'right'))
+data$rank.from.mean <- rep(NA, length(data$d))
+left.indexes = which(data$side == 'left')
+data$rank.from.mean[left.indexes] <- seq(2*length(left.indexes), 1, -2)
+data$rank.from.mean[-left.indexes] <- seq(1, 2*(length(data$d)-length(left.indexes)), 2)+2
+
+```
+
+## The Arithmetic Linear Mean
+
+### One-Dimensional Center of Mass
+
+[TK]
+
+```{r, echo=F}
+
+ggplot(data, aes(x=d, y=0)) +
+  geom_point() +
+  geom_point(data=data.stats, aes(x=mean, y=0), size=4, shape=17)
+
+```
+
+### Elastic Bands
+
+[TK: Intro]
+
+In the diamgram below, you can imagine the vertical bold black line as a rod which is free to slide (without friction) horizontally along (and perpendicular to) the horizontal bold black lines (the "rails").
+
+We've stuck a rigid post (of arbitrary height) at the location of each data point on the horizontal axis, and hooked an elastic band around each post and the sliding rod.
+
+Assuming identical ideal elastic bands, the force exerted by each on the sliding rod is a fixed proportion to the distance from the post (i.e., the datapoint) to the rod. This is shown below in the thickness of the horizontal "elastic" bands, where thicker bands indicate a stronger force.
+
+In this context, the mean is given by the location along the horizontal axis at which the net force exerted on the sliding rod by the elastic bands is 0, as shown by the sequence of equations below:
+
+$$
+\begin{align*}
+\sum_{i=1}^N F_i &= 0 \\
+\sum k \left(d_i - \bar{d}\right) &= 0 \\
+k \sum \left(d_i - \bar{d}\right) &= 0 \\
+k \left( \sum d_i - \sum \bar{d} \right) &= 0 \\
+k \left( \sum d_i - \bar{d} \sum 1 \right) &= 0 \\
+k \left( \sum d_i - \bar{d}N \right) &= 0 \\
+k \left( \sum d_i - \sum d_i \right) &= 0 \\
+k \left( 0 \right) &= 0 \\
+0 &= 0
+\end{align*}
+$$
+
+Above, $F_i$ is the force exerted by sample $i$, defined as a fixed "spring constant" $k$ times the displacement, which is the distance between the data point and the sliding rod. If we assume, as hown above, that the location of the sliding rod is equal to the mean of the data, $\bar{d}$, we find that the forces on either side of the rod cancel out, resulting in a net force of 0 at the mean.
+
+```{r, echo=F}
+
+ggplot(data, aes(x=d, y=rank.from.mean, yend=rank.from.mean)) +
+  ggtitle("Arithemetic Linear Mean\nAs the Balance Point of Elastic Bands") +
+  xlab(NULL) +
+  ylab(NULL) +
+  guides(size=F) +
+  #Vertical sliding bar (mean)
+  geom_vline(aes(xintercept=mean(d)), size=2) +
+  #Horiztonal rails on top and bottom
+  geom_hline(aes(yintercept=c(0, max(rank.from.mean)*1.1)), size=2) + 
+  #The vertical posts
+  geom_segment(aes(xend=d, y=0), size=1, color='brown') +
+  #The rubber bands
+  geom_segment(aes(xend=mean(d), y=rank.from.mean, size=dist.to.mean), lineend='round', alpha=0.5, colour='red') +
+  scale_size_continuous(range=c(0.5, 3))
+
+```

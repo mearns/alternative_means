@@ -15,3 +15,6 @@ vignettes/*.html
 vignettes/*.pdf
 
 *.Rproj
+
+#Rmarkdown output
+*.html
